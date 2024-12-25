@@ -1,0 +1,52 @@
+# Spring Boot target directory
+/target/
+
+# IntelliJ IDEA files
+/.idea/
+
+# Eclipse files
+/.project
+/.classpath
+/.settings/
+
+# Maven wrapper (if you use it)
+/.mvn/wrapper/maven-wrapper.jar
+/.mvn/wrapper/maven-wrapper.properties
+
+# Gradle wrapper (if you use it)
+/gradle/wrapper/gradle-wrapper.jar
+/gradle/wrapper/gradle-wrapper.properties
+
+# Spring Boot Log files
+/logs/
+
+# IDE-specific files
+*.iml
+*.ipr
+*.iws
+*.log
+.idea/
+.project
+.classpath
+.settings/
+.vscode/
+*.DS_Store
+
+# Compiled Java classes and JAR files
+*.class
+*.jar
+
+# Generated Gradle build directory
+/build/
+.gradle/
+
+# Generated Gradle IDE files
+.gradle
+.idea
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+#Eclipse
+.factorypath

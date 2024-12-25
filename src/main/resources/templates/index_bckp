@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to POJO Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f0f8ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .form-control {
+            background-color: #ffffff;
+            border: 1px solid #dcdcdc;
+            font-size: 1rem;
+        }
+
+        .json-container {
+            position: relative;
+            display: flex;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .json-container .line-numbers {
+            background-color: #ffffff;
+            padding: 0;
+            margin: 0;
+            width: 70px;  /* Increased width for line numbers */
+            color: #888;
+            font-size: 13px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            border-right: 1px solid #dcdcdc;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .json-container .json-input {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            background-color: #f7f7f7;
+            border-radius: 5px;
+            padding: 10px;
+            width: calc(100% - 80px);  /* Adjusted width to account for the line number column and space */
+            border: 1px solid #007bff;  /* Blue border */
+            line-height: 1.5;
+            resize: none;
+            font-size: 14px;
+            margin: 0;
+            min-height: 150px;
+            box-sizing: border-box;
+            outline: none;
+            overflow: hidden;
+        }
+
+        .json-container .json-input span.json-key {
+            color: #e06c75; /* Light red for keys */
+        }
+
+        .json-container .json-input span.json-string {
+            color: #98c379; /* Green for strings */
+        }
+
+        .json-container .json-input span.json-number {
+            color: #61afef; /* Blue for numbers */
+        }
+
+        .json-container .json-input span.json-boolean {
+            color: #d19a66; /* Orange for booleans */
+        }
+
+        .json-container .json-input span.json-null {
+            color: #5c6370; /* Gray for nulls */
+        }
+
+        .card-body pre {
+            background-color: #282c34; /* Eclipse-like background */
+            color: #abb2bf; /* Light gray text */
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #3a3f44;
+        }
+
+        .language-java {
+            background-color: #282c34;
+            border: 1px solid #3a3f44;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .copy-btn {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .copy-btn:hover {
+            color: #ffffff;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 120px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 50px;
+            left: 50%;
+            margin-left: -60px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .copy-btn:focus + .tooltip-text, .copy-btn:hover + .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .invalid-line {
+            background-color: #ffcccb;
+        }
+
+        /* Remove scrollbar from json-input */
+        .json-input {
+            overflow: hidden;
+        }
+
+        /* Line number column style */
+        .line-numbers {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">JSON to POJO Converter</h1>
+    <div class="row mt-4">
+        <!-- Input Panel -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Input JSON</div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <div class="json-container">
+                            <div id="lineNumbers" class="line-numbers"></div>
+                            <textarea class="form-control json-input" name="jsonInput" id="jsonInput" placeholder="Enter your JSON here..."></textarea>
+                        </div>
+                        <!-- Error message for invalid JSON -->
+                        <div id="error-message" class="error-message" style="display:none;">Invalid JSON. Please check the syntax.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel (Java code without line numbers) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Generated POJO</div>
+                <div class="card-body">
+                    <!-- Copy button as an icon -->
+                    <button class="copy-btn" id="copyButton">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <div class="tooltip-text" id="tooltip">Copied to clipboard!</div>
+                    <pre id="pojoOutput" class="language-java"></pre> <!-- Java code with syntax highlighting -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+<!-- Include Prism.js JS for syntax highlighting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
+<script>
+    // Function to add line numbers to JSON input
+    function addLineNumbers(elementId, lineNumberId) {
+        const element = document.getElementById(elementId);
+        const lineNumbersContainer = document.getElementById(lineNumberId);
+        const lines = element.value.split('\n').length;
+        let lineNumbersHtml = '';
+        for (let i = 1; i <= lines; i++) {
+            lineNumbersHtml += `<div>${i}</div>`;
+        }
+        lineNumbersContainer.innerHTML = lineNumbersHtml;
+        adjustHeight(element, lineNumbersContainer); // Adjust the height of the line numbers
+    }
+
+    // Function to adjust the height of both the textarea and the line numbers
+    function adjustHeight(textarea, lineNumbers) {
+        const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight); // Get line height of textarea
+        const rows = textarea.value.split('\n').length; // Count rows
+        const height = lineHeight * rows; // Calculate the height based on line height and rows
+
+        // Set the height for both the textarea and the line numbers
+        textarea.style.height = `${height}px`; // Match height exactly with content
+        lineNumbers.style.height = `${height}px`; // Match line numbers height with the textarea
+    }
+
+    // Update line numbers dynamically when JSON input changes
+    document.getElementById('jsonInput').addEventListener('input', function () {
+        addLineNumbers('jsonInput', 'lineNumbers');
+        autoResizeTextArea('jsonInput'); // Resize textarea dynamically
+        validateJSON(); // Validate JSON automatically
+        convertJSONToPOJO(); // Automatically trigger POJO conversion
+    });
+
+    // Function to dynamically resize the textarea based on content
+    function autoResizeTextArea(textareaId) {
+        const textarea = document.getElementById(textareaId);
+        textarea.style.height = 'auto'; // Reset height
+        textarea.style.height = textarea.scrollHeight + 'px'; // Adjust height to content
+    }
+
+    // Function to validate JSON automatically
+    function validateJSON() {
+        const jsonInput = document.getElementById('jsonInput').value;
+        const errorMessageElement = document.getElementById('error-message');
+
+        try {
+            JSON.parse(jsonInput); // Try parsing JSON
+            errorMessageElement.style.display = 'none'; // Hide error message if valid
+            document.getElementById('jsonInput').classList.remove('invalid-line'); // Remove red highlight
+        } catch (error) {
+            errorMessageElement.style.display = 'block'; // Show error message if invalid
+            document.getElementById('jsonInput').classList.add('invalid-line'); // Highlight invalid line
+        }
+    }
+
+    // Function to send the JSON input to the server and generate POJO
+    async function convertJSONToPOJO() {
+        const jsonInput = document.getElementById('jsonInput').value;
+
+        try {
+            // Assuming there's an API endpoint to handle the conversion
+            const response = await axios.post('/api/v1/json2pojo/generate', jsonInput, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            document.getElementById('pojoOutput').textContent = response.data;
+            Prism.highlightAll(); // Reapply syntax highlighting after updating the POJO code
+        } catch (error) {
+            document.getElementById('pojoOutput').textContent = 'Error: ' + error.response.data;
+        }
+    }
+
+    // Clipboard copy functionality for Java code
+    document.getElementById('copyButton').addEventListener('click', function () {
+        const pojoOutput = document.getElementById('pojoOutput').textContent;
+        navigator.clipboard.writeText(pojoOutput).then(function () {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.visibility = 'visible';
+            setTimeout(function () {
+                tooltip.style.visibility = 'hidden';
+            }, 1000); // Hide tooltip after 1 second
+        }).catch(function (error) {
+            console.error('Failed to copy: ', error);
+        });
+    });
+
+    // Initialize line numbers and auto-validation
+    addLineNumbers('jsonInput', 'lineNumbers');
+    validateJSON();
+</script>
+</body>
+</html>
