@@ -27,7 +27,7 @@ public class PojoGenerator {
             }
         });
 
-        mainClass.append("}\n");
+        mainClass.append("}\n\n");
         classes.put(className, mainClass.toString());
         return classes;
     }
